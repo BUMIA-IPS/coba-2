@@ -1,0 +1,48 @@
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; }
+#game-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
+
+#pool-area { flex: 70; position: relative; width: 100%; overflow: hidden; background-color: #0077be; }
+.bg-track { width: 100%; height: 100%; object-fit: fill; position: absolute; top: 0; left: 0; }
+
+.duck { 
+    position: absolute; 
+    height: 30%; 
+    transform: scaleX(-1); 
+    transition: left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    z-index: 10;
+    filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.3));
+}
+
+#player-controls { 
+    flex: 30; display: grid; grid-template-columns: repeat(4, 1fr); 
+    gap: 8px; padding: 10px; background: #01579b; border-top: 5px solid #ffeb3b; 
+}
+
+.p-box { background: #e3f2fd; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; }
+.p-tag { text-align: center; font-weight: bold; font-size: 14px; color: #01579b; margin-bottom: 5px; }
+.q-box { 
+    background: white; flex-grow: 1; margin-bottom: 8px; border-radius: 6px; 
+    font-size: 11px; text-align: center; padding: 6px; display: flex; 
+    align-items: center; justify-content: center; font-weight: bold; 
+    overflow-y: auto; border: 1px solid #ccc; 
+}
+
+.options { display: flex; flex-direction: column; gap: 4px; }
+.opt-btn { 
+    padding: 10px; font-size: 10px; cursor: pointer; border: none; 
+    border-radius: 5px; background: #ffeb3b; color: #000; font-weight: bold;
+    text-align: left; transition: 0.2s; box-shadow: 0 3px 0 #fbc02d;
+}
+.opt-btn:active { transform: translateY(2px); box-shadow: none; }
+
+#win-notif {
+    display: none; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    background: #ffeb3b; padding: 30px; border-radius: 20px; font-size: 30px; 
+    z-index: 100; border: 6px solid white; box-shadow: 0 0 50px rgba(0,0,0,0.5); text-align: center;
+}
+
+#start-btn {
+    position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    padding: 20px 60px; border-radius: 50px; background: #4caf50; color: white; 
+    font-size: 24px; cursor: pointer; z-index: 101; font-weight: bold; border: 4px solid white;
+}
