@@ -1,89 +1,86 @@
-// Variabel dengan nama unik untuk menghindari error 'Already Declared'
-var RACE_SHEET_ID = "1hpWKGV0q74t77vxGrHAujag-i2OTquEi_0U4eOcsPKM";
-var RACE_DATA_URL = "https://docs.google.com/spreadsheets/d/" + RACE_SHEET_ID + "/gviz/tq?tqx=out:json";
+var FINAL_SHEET_ID = "1hpWKGV0q74t77vxGrHAujag-i2OTquEi_0U4eOcsPKM";
+var FINAL_URL = "https://docs.google.com/spreadsheets/d/" + FINAL_SHEET_ID + "/gviz/tq?tqx=out:json";
 
-var raceQuestions = [];
-var racePositions = [1, 1, 1, 1]; 
-var raceIndexSoal = [0, 0, 0, 0]; 
-var isRaceActive = false;
+var kuisData = [];
+var posisiPemain = [1, 1, 1, 1];
+var indeksSoalPemain = [0, 0, 0, 0];
+var gameBerjalan = false;
 
 async function initGame() {
     try {
-        const response = await fetch(RACE_DATA_URL);
+        const response = await fetch(FINAL_URL);
         const text = await response.text();
         const json = JSON.parse(text.substr(47).slice(0, -2));
         
-        raceQuestions = json.table.rows.map(r => ({
-            q: r.c[0] ? String(r.c[0].v) : "Soal...",
-            a: r.c[1] ? String(r.c[1].v) : "-",
-            b: r.c[2] ? String(r.c[2].v) : "-",
-            c: r.c[3] ? String(r.c[3].v) : "-",
-            k: r.c[4] ? String(r.c[4].v).toUpperCase().trim() : "A"
+        kuisData = json.table.rows.map(r => ({
+            tanya: r.c[0] ? String(r.c[0].v) : "",
+            a: r.c[1] ? String(r.c[1].v) : "",
+            b: r.c[2] ? String(r.c[2].v) : "",
+            c: r.c[3] ? String(r.c[3].v) : "",
+            // Kolom E adalah r.c[4]
+            kunci: r.c[4] ? String(r.c[4].v).toUpperCase().trim() : ""
         }));
 
-        if (raceQuestions.length > 0) {
-            isRaceActive = true;
+        if (kuisData.length > 0) {
+            gameBerjalan = true;
             document.getElementById('start-btn').style.display = 'none';
-            for(let i=1; i<=4; i++) updateTampilanSoal(i);
+            for(let i=1; i<=4; i++) muatSoal(i);
         }
-    } catch(err) {
-        alert("Gagal memuat soal! Pastikan Google Sheet sudah di-Publish ke Web.");
-        console.error(err);
+    } catch (e) {
+        alert("Gagal memuat soal! Pastikan Google Sheet sudah 'Publish to Web'.");
     }
 }
 
-function updateTampilanSoal(pNum) {
-    const data = raceQuestions[raceIndexSoal[pNum-1]];
-    if (!data) return;
+function muatSoal(p) {
+    let soal = kuisData[indeksSoalPemain[p-1]];
+    document.getElementById("q" + p).innerText = soal.tanya;
+    let boxOpsi = document.getElementById("opt" + p);
+    boxOpsi.innerHTML = "";
 
-    document.getElementById("q" + pNum).innerText = data.q;
-    const areaTombol = document.getElementById("opt" + pNum);
-    areaTombol.innerHTML = ''; 
-    
-    ['A', 'B', 'C'].forEach(label => {
-        const btn = document.createElement('button');
-        btn.className = 'opt-btn';
-        btn.innerText = label + ". " + data[label.toLowerCase()];
-        // Teknik Closure agar nomor pemain terkunci dengan benar
-        btn.onclick = (function(p, l) {
-            return function() { prosesJawaban(p, l); };
-        })(pNum, label);
-        areaTombol.appendChild(btn);
+    ["A", "B", "C"].forEach(opsi => {
+        let tombol = document.createElement("button");
+        tombol.className = "opt-btn";
+        tombol.innerText = opsi + ". " + soal[opsi.toLowerCase()];
+        tombol.onclick = function() { verifikasiJawaban(p, opsi); };
+        boxOpsi.appendChild(tombol);
     });
 }
 
-function prosesJawaban(pNum, pilihan) {
-    if(!isRaceActive) return;
-    
-    const jawabanBenar = raceQuestions[raceIndexSoal[pNum-1]].k;
-    const bebek = document.getElementById("d" + pNum);
+function verifikasiJawaban(p, jawaban) {
+    if(!gameBerjalan) return;
 
-    if (pilihan === jawabanBenar) {
-        // Suara Quack
-        const sOk = document.getElementById('snd-ok');
-        if(sOk) { sOk.currentTime = 0; sOk.play().catch(()=>{}); }
+    let benar = kuisData[indeksSoalPemain[p-1]].kunci;
+    let elBebek = document.getElementById("d" + p);
+
+    if (jawaban === benar) {
+        // Suara Benar
+        let sOk = document.getElementById('snd-ok');
+        sOk.currentTime = 0;
+        sOk.play().catch(()=>{});
+
+        // Bebek Maju 8%
+        posisiPemain[p-1] += 8;
+        elBebek.style.left = posisiPemain[p-1] + "%";
         
-        // Maju 8%
-        racePositions[pNum-1] += 8; 
-        bebek.style.left = racePositions[pNum-1] + "%";
-        
-        if (racePositions[pNum-1] >= 85) {
-            isRaceActive = false;
-            const popup = document.getElementById('win-notif');
-            popup.innerText = "BEBEK " + pNum + " MENANG! 🏆";
-            popup.style.display = 'block';
+        // Cek Menang
+        if (posisiPemain[p-1] >= 85) {
+            gameBerjalan = false;
+            let win = document.getElementById('win-notif');
+            win.innerText = "BEBEK " + p + " MENANG! 🏆";
+            win.style.display = "block";
         }
     } else {
         // Suara Salah
-        const sNo = document.getElementById('snd-no');
-        if(sNo) { sNo.currentTime = 0; sNo.play().catch(()=>{}); }
-        
+        let sNo = document.getElementById('snd-no');
+        sNo.currentTime = 0;
+        sNo.play().catch(()=>{});
+
         // Mundur 3%
-        racePositions[pNum-1] = Math.max(1, racePositions[pNum-1] - 3);
-        bebek.style.left = racePositions[pNum-1] + "%";
+        posisiPemain[p-1] = Math.max(1, posisiPemain[p-1] - 3);
+        elBebek.style.left = posisiPemain[p-1] + "%";
     }
 
-    // Ganti ke soal berikutnya untuk pemain tersebut
-    raceIndexSoal[pNum-1] = (raceIndexSoal[pNum-1] + 1) % raceQuestions.length;
-    updateTampilanSoal(pNum);
+    // Loop soal
+    indeksSoalPemain[p-1] = (indeksSoalPemain[p-1] + 1) % kuisData.length;
+    muatSoal(p);
 }
